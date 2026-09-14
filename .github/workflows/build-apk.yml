@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract project
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir extracted
+          unzip -q Jelly_Recess_Light_Galaxy_IconPack_Project.zip -d extracted
+          settings_file="$(find extracted -maxdepth 5 -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit)"
+          if [[ -n "$settings_file" ]]; then
+            project_dir="$(dirname "$settings_file")"
+          else
+            build_file="$(find extracted -maxdepth 5 -type f \( -name build.gradle -o -name build.gradle.kts \) -print -quit)"
+            test -n "$build_file"
+            project_dir="$(dirname "$build_file")"
+          fi
+          echo "PROJECT_DIR=$project_dir" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
+        shell: bash
+        run: |
+          if [[ -f gradlew ]]; then
+            chmod +x gradlew
+            ./gradlew --no-daemon assembleDebug
+          else
+            gradle --no-daemon assembleDebug
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jelly-icon-test-debug-apk
+          path: extracted/**/*.apk
+          if-no-files-found: error
