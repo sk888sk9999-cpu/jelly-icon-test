@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir extracted
-          unzip -q Jelly_Recess_Light_Galaxy_IconPack_Project.zip -d extracted
+          unzip -q Jelly_Recess_Global_20_MASTER_Galaxy_IconPack_Project.zip -d extracted
           settings_file="$(find extracted -maxdepth 5 -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit)"
           if [[ -n "$settings_file" ]]; then
             project_dir="$(dirname "$settings_file")"
